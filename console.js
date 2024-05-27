@@ -50,7 +50,8 @@ class CustomConsol {
                 case typeof arg === 'boolean':
                     return `<span class="italic">${arg}</span>`;
                 default:
-                    return arg.toString(); // Serialize other types
+                    // encodes special characters
+                    return arg.toString().replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
 
         }).join(' ');

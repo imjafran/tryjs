@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TryJS - Interactive JavaScript Live Code Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
+        rel="stylesheet">
+    <style>
+        .CodeMirror,
+        body {
+            font-family: "Fira Code", monospace;
+            font-size: 16px;
+        }
+
+        .monospace {
+            font-family: "Roboto Mono", monospace;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col sm:flex-row h-screen overflow-hidden">
+    <div id="editor-container" class="h-full sm:w-1/2 flex flex-col p-4 bg-gray-100 gap-4">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-bold flex items-center gap-2">TryJS <span
+                    class="text-sm font-normal">[Console]</span></h2>
+            <button id="run-button" class="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 active:scale-95 transition">Run Code</button>
+        </div>
+        <textarea id="js-code" class="w-full" placeholder="Enter JavaScript">let welcome = 'Hello World!';
+console.log(welcome);
+</textarea>
+        <div class="text-xs text-gray-500 text-center font-normal sm:block hidden">Interactive Learning System Developed
+            by <a href="https://fb.com/imjafran" target="_blank" title="Jafran Hasan on Facebook">Jafran Hasan</a></div>
+    </div>
+    <div id="output-container" class="h-full sm:w-1/2 flex flex-col p-5 bg-gray-900">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-sm font-normal tracking-wider monospace text-gray-300">Console Output:</h2>
+            <button id="clear-console"
+                class="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded hover:bg-gray-700  active:scale-95 transition">Clear</button>
+        </div>
+        <div id="console-output"
+            class="flex-grow text-gray-300 font-mono overflow-y-auto monospace text-sm flex flex-col gap-3"></div>
+    </div>
+    <script>
+        const runButton = document.getElementById('run-button');
+        const consoleOutput = document.getElementById('console-output');
+
+        // Initialize CodeMirror editor
+        const editor = CodeMirror.fromTextArea(document.getElementById('js-code'), {
+            mode: "javascript",
+            theme: "material",
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            tabSize: 4,
+            indentUnit: 4,
+            indentWithTabs: true,
+            placeholder: 'Enter JavaScript',
+            fontSize: 16,
+        });
+        editor.setSize('100%', '100%');
+
+        // Custom console object to handle different log types
+        const customConsole = {
+            getTime: function () {
+                const date = new Date();
+                return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+            },
+            log: function (...args) {
+                customConsole.print('text-gray-200', ...args);
+            },
+            error: function (...args) {
+                customConsole.print('text-red-400', ...args);
+            },
+            warn: function (...args) {
+                customConsole.print('text-yellow-400', ...args);
+            },
+            info: function (...args) {
+                customConsole.print('text-blue-200', ...args);
+            },
+            print: function (className = 'text-yellow-200', ...args) {
+                // Join all arguments and print them in the console, JSON.stringify for objects
+                const output = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
+                consoleOutput.innerHTML += `<span class="${className}" title="${customConsole.getTime()}">${output}</span>`;
+            }
+        };
+
+        function updateOutput() {
+            const js = editor.getValue();
+            const wrappedJs = `
+        (function() {
+            console.log = customConsole.log;
+            console.error = customConsole.error;
+            console.warn = customConsole.warn;
+            console.info = customConsole.info;
+          try { ${js} } catch (e) {
+            console.error('Error:', e.message);
+          }
+        })();
+      `;
+            try {
+                new Function('customConsole', wrappedJs)(customConsole);
+            } catch (e) {
+                consoleOutput.innerHTML += `<span style="color: red;">Error: ${e.message}</span><br />`;
+            }
+        }
+
+        runButton.addEventListener('click', updateOutput);
+
+        document.getElementById('clear-console').addEventListener('click', () => {
+            consoleOutput.innerHTML = '';
+        });
+    </script>
+</body>
+
+</html>

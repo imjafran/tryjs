@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TryJS - Interactive JavaScript Live Code Editor</title>
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material.min.css">
@@ -15,6 +16,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
         rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .CodeMirror,
         body {
@@ -26,100 +28,75 @@
             font-family: "Roboto Mono", monospace;
         }
     </style>
+    <script type="module" src="app.js"></script>
 </head>
 
 <body class="flex flex-col sm:flex-row h-screen overflow-hidden">
-    <div id="editor-container" class="h-full sm:w-1/2 flex flex-col p-4 bg-gray-100 gap-4">
+    <div id="editor-container" class="h-full w-full flex flex-col p-4 bg-gray-100 gap-4">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold flex items-center gap-2">TryJS <span
-                    class="text-sm font-normal">[Console]</span></h2>
-            <button id="run-button" class="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 active:scale-95 transition">Run Code</button>
+            <h2 class="text-xl font-light flex items-center gap-2 tracking-wider"><span
+                    class="w-4 h-4 bg-slate-800 rounded-tl-full"></span> Try.JS</h2>
+            <button id="run-button"
+                class="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 active:scale-95 transition font-light">Run
+                Code</button>
         </div>
-        <textarea id="js-code" class="w-full" placeholder="Enter JavaScript">let welcome = 'Hello World!';
+        <textarea id="js-code" class="w-full" placeholder="Enter JavaScript">const welcome = 'Hello World!';
 console.log(welcome);
 </textarea>
-        <div class="text-xs text-gray-500 text-center font-normal sm:block hidden">Interactive Learning System Developed
-            by <a href="https://fb.com/imjafran" target="_blank" title="Jafran Hasan on Facebook">Jafran Hasan</a></div>
+        <footer class="flex items-center justify-between gap-2">
+            <div class="flex items justify-center gap-2">
+                <button class="text-slate-600 text-sm" id="help-button">Need Help?</button>
+            </div>
+            <div class="text-xs text-gray-600 text-center font-light sm:block hidden">Made for Learners by <a
+                    href="https://fb.com/iamjafran" target="_blank" title="Jafran Hasan on Facebook">Jafran Hasan</a>
+            </div>
+        </footer>
     </div>
-    <div id="output-container" class="h-full sm:w-1/2 flex flex-col p-5 bg-gray-900">
+    <div id="output-container" class="h-full md:w-1/2 md:max-w-2xl flex flex-col p-4 bg-neutral-800">
         <div class="flex items-center justify-between mb-5">
-            <h2 class="text-sm font-normal tracking-wider monospace text-gray-300">Console Output:</h2>
+            <h2 class="text-sm font-light tracking-wider monospace text-gray-300">Console Output:</h2>
             <button id="clear-console"
-                class="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded hover:bg-gray-700  active:scale-95 transition">Clear</button>
+                class="text-sm px-2 py-1 bg-slate-700 text-gray-300 rounded hover:bg-gray-700  active:scale-95 transition">Clear</button>
         </div>
         <div id="console-output"
-            class="flex-grow text-gray-300 font-mono overflow-y-auto monospace text-sm flex flex-col gap-3"></div>
+            class="flex-grow text-gray-300 overflow-y-auto monospace text-sm flex flex-col gap-3 overflow-x-auto font-normal">
+        </div>
+        <iframe id="output-frame" class="w-0 h-0 hidden"></iframe>
     </div>
-    <script>
-        const runButton = document.getElementById('run-button');
-        const consoleOutput = document.getElementById('console-output');
-
-        // Initialize CodeMirror editor
-        const editor = CodeMirror.fromTextArea(document.getElementById('js-code'), {
-            mode: "javascript",
-            theme: "material",
-            lineNumbers: true,
-            matchBrackets: true,
-            autoCloseBrackets: true,
-            tabSize: 4,
-            indentUnit: 4,
-            indentWithTabs: true,
-            placeholder: 'Enter JavaScript',
-            fontSize: 16,
-        });
-        editor.setSize('100%', '100%');
-
-        // Custom console object to handle different log types
-        const customConsole = {
-            getTime: function () {
-                const date = new Date();
-                return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-            },
-            log: function (...args) {
-                customConsole.print('text-gray-200', ...args);
-            },
-            error: function (...args) {
-                customConsole.print('text-red-400', ...args);
-            },
-            warn: function (...args) {
-                customConsole.print('text-yellow-400', ...args);
-            },
-            info: function (...args) {
-                customConsole.print('text-blue-200', ...args);
-            },
-            print: function (className = 'text-yellow-200', ...args) {
-                // Join all arguments and print them in the console, JSON.stringify for objects
-                const output = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
-                consoleOutput.innerHTML += `<span class="${className}" title="${customConsole.getTime()}">${output}</span>`;
-            }
-        };
-
-        function updateOutput() {
-            const js = editor.getValue();
-            const wrappedJs = `
-        (function() {
-            console.log = customConsole.log;
-            console.error = customConsole.error;
-            console.warn = customConsole.warn;
-            console.info = customConsole.info;
-          try { ${js} } catch (e) {
-            console.error('Error:', e.message);
-          }
-        })();
-      `;
-            try {
-                new Function('customConsole', wrappedJs)(customConsole);
-            } catch (e) {
-                consoleOutput.innerHTML += `<span style="color: red;">Error: ${e.message}</span><br />`;
-            }
-        }
-
-        runButton.addEventListener('click', updateOutput);
-
-        document.getElementById('clear-console').addEventListener('click', () => {
-            consoleOutput.innerHTML = '';
-        });
-    </script>
+    <!-- help modal  -->
+    <div id="help-modal" class="fixed w-full h-full left-0 top-0 flex items-center jusitfy-center hidden transition">
+        <div class="absolute w-full h-full left-0 top-0 bg-black opacity-80 close-help"></div>
+        <div class="w-full max-w-xl bg-white p-8 pb-2 z-50 mx-auto rounded flex flex-col gap-10 relative">
+            <div class="close-help absolute right-0 top-1 text-gray-500 text-sm cursor-pointer p-4 z-50"> Close </div>
+            <div>
+                <h2 class="text-xl mb-2 flex items-center gap-2"><span
+                        class="block w-4 h-4 bg-slate-800 rounded-tl-full"></span> Try.JS</h2>
+                <p class="text-sm text-gray-600">Open-source, Robust, Minimal JavaScript Playground.</p>
+            </div>
+            <div>
+                <h3 class="text-lg mb-3">Important Notes:</h3>
+                <ul class="text-sm text-gray-600 list-disc ml-5 space-y-2">
+                    <li>Unlimited lines of codes, no time limits.</li>
+                    <li>Modern JavaScript: ES6, ESNext, Async, Fetch, etc.</li>
+                    <li>Console only; DOM Operations are currently restricted.</li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg mb-3">Keyboard Shortcuts:</h3>
+                <ul class="text-sm text-gray-600 list-disc ml-5 space-y-2">
+                    <li><code class="bg-slate-50 text-blue-600">Ctrl + n</code> to reset editor.</li>
+                    <li><code class="bg-slate-50 text-blue-600">Ctrl + n</code> to run code.</li>
+                    <li><code class="bg-slate-50 text-blue-600">Ctrl + c</code> to clear console.</li>
+                    <li><code class="bg-slate-50 text-blue-600">Ctrl + h</code> to open help.</li>
+                    <li><code class="bg-slate-50 text-blue-600">Escape</code> to close help.</li>
+                </ul>
+            </div>
+            <div class="text-center text-sm text-slate-500"> Made for Learners by <a href="https://fb.com/iamjafran"
+                    target="_blank" class="text-blue-600 hover:text-blue-700 hover:underline transition"
+                    title="Jafran Hasan on Facebook">Jafran Hasan</a>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

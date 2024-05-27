@@ -42,21 +42,26 @@ class TryJS {
         this.editor.setSize('100%', '100%');
     }
 
-    helpMenu(show = true) {
-        this.$('#help-modal').classList.toggle('hidden', !show);
+    toggleHelp() {
+        this.$('#help-modal').classList.toggle('hidden');
+    }
+
+    toggleDocument(){
+        this.$('#document-frame').classList.toggle('hidden');
     }
 
     initEvents() {
         this.$('#run-button').addEventListener('click', this.runCode.bind(this));
         this.$('#clear-console').addEventListener('click', this.clearConsole.bind(this));
-        this.$('#help-button').addEventListener('click', this.helpMenu.bind(this));
+        this.$('#help-button').addEventListener('click', this.toggleHelp.bind(this));
+        this.$('#close-document').addEventListener('click', this.toggleDocument.bind(this));
         this.$$('.close-help').forEach(el => {
-            el.addEventListener('click', () => this.helpMenu(false));
+            el.addEventListener('click', () => this.toggleHelp(false));
         });
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
-                this.helpMenu(false);
+                this.toggleHelp(false);
                 this.runCode();
             }
 
@@ -67,7 +72,7 @@ class TryJS {
 
             // On Ctrl + H, open the help modal.
             if (e.key === 'h' && e.ctrlKey) {
-                this.helpMenu();
+                this.toggleHelp();
             }
 
             // On Ctrl + R, run the code.
@@ -83,6 +88,11 @@ class TryJS {
             // On Ctr + N, clear the editor.
             if (e.key === 'n' && e.ctrlKey) {
                 this.editor.setValue('');
+            }
+
+            // On Ctrl + D, show the document.
+            if (e.key === 'd' && e.ctrlKey) {
+                this.toggleDocument();
             }
 
         })
@@ -104,18 +114,20 @@ class TryJS {
         });
 
         // Format import in the top and code in the bottom
-        return imports + '\n' + `try { ${code} } catch (e) { console.error(e.message); parent.window.console.error(e) }`;
+        return imports + '\n' + `(() => { try { ${code} } catch (e) { console.error(e.message || e); parent.window.console.error(e) } })()`;
+    }
+
+    get importingModules() {
+        return this.editor.getValue().includes('import');
+    }
+
+    get isDOMOperation() {
+        return this.editor.getValue().includes('document');
     }
 
     runCode = () => {
         const iFrame = document.getElementById('output-frame');
         iFrame.contentWindow.document.body.innerHTML = '';
-
-        // Runner code.
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.innerHTML = this.formatCode();
-        iFrame.contentWindow.document.body.appendChild(script);
 
         // Debugger.
         const debugScript = document.createElement('script');
@@ -131,6 +143,24 @@ class TryJS {
         `
         iFrame.contentWindow.document.body.appendChild(debugScript);
 
+        // Runner code.
+        const script = document.createElement('script');
+        script.type = 'module';
+
+        const code = this.formatCode()
+
+        if ( !this.importingModules && ! this.isDOMOperation) {
+            try {
+                eval(code)
+            } catch (e) {
+                window.__customConsole.error(e.message || e)
+                return;
+            }
+        }
+
+        script.innerHTML = code;
+        iFrame.contentWindow.document.body.appendChild(script);
+        
         // Reset iFrame.
         iFrame.contentWindow.document.body.innerHTML = '';
     }

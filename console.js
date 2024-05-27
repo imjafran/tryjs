@@ -43,7 +43,7 @@ class CustomConsol {
                     return arg.stack || arg.message; // Serialize errors
                 case typeof arg === 'function':
                 case typeof arg === 'class':
-                    return `<span class="text-yellow-300 italic">f</span> ${arg.toString()}`;
+                    return `<span class="text-yellow-300 italic">f</span> ${arg.name || arg.toString()}`;
                 case typeof arg === 'object':
                     return JSON.stringify(arg, null, 2); // Serialize other objects
                 // Boolean, Number
@@ -51,12 +51,12 @@ class CustomConsol {
                     return `<span class="italic">${arg}</span>`;
                 default:
                     // encodes special characters
-                    return arg.toString().replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return arg ? arg.toString().replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'undefined';
             }
 
         }).join(' ');
         const container = this.dom.querySelector('#console-output')
-        container.innerHTML += `<div class="flex justify-between gap-2 w-full" title="${time}"><div class="${className} flex gap-2 w-full"><div class="text-slate-500 font-light w-3">~</div> <div class="w-full whitespace-pre-wrap">${output}</div></div></div>`;
+        container.innerHTML += `<div class="flex justify-between gap-2 w-full" title="${time}"><div class="${className} flex gap-2 w-full"><div class="text-slate-500 font-light w-3">&gt;</div> <div class="w-full whitespace-pre-wrap">${output}</div></div></div>`;
     }
 }
 

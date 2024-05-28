@@ -1,5 +1,5 @@
 import CustomConsole from './console.js';
-import randomSnippet from './random.js';
+import randomSnippet from './snippets.js';
 
 class TryJS {
 
@@ -147,18 +147,7 @@ class TryJS {
         const script = document.createElement('script');
         script.type = 'module';
 
-        const code = this.formatCode()
-
-        if ( !this.importingModules && ! this.isDOMOperation) {
-            try {
-                eval(code)
-            } catch (e) {
-                window.__customConsole.error(e.message || e)
-                return;
-            }
-        }
-
-        script.innerHTML = code;
+        script.innerHTML = this.formatCode();
         iFrame.contentWindow.document.body.appendChild(script);
         
         // Reset iFrame.

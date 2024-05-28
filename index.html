@@ -17,17 +17,16 @@
         href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
         rel="stylesheet">
     <style>
-        .CodeMirror,
-        body {
+        .CodeMirror {
             font-family: "Fira Code", monospace;
             font-size: 16px;
         }
 
-        .monospace {
+        .monospace, body {
             font-family: "Roboto Mono", monospace;
         }
     </style>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="./src/app.js"></script>
 </head>
 
 <body class="flex flex-col sm:flex-row h-screen overflow-hidden w-full">
@@ -47,10 +46,10 @@
 console.log(welcome);
 </textarea>
         <footer class="flex items-center justify-center gap-2 text-sm text-slate-400">
-            <a class="hover:underline text-blue-500" href="/" target="_blank">home</a> ~ 
-            <a class="hover:underline text-blue-500" href="https://jafran.me" target="_blank">tools</a> ~
-            <a class="hover:underline text-blue-500" href="https://donate.stripe.com/7sI6qE4wg0Fi0M07ss" target="_blank">donate</a> ~
-            <a class="hover:underline text-blue-500" href="https://fb.com/iamjafran" target="_blank">developer</a>
+            <a class="hover:underline text-blue-500" href="/" target="_blank"  title="Try.JS Home">home</a> /
+            <a class="hover:underline text-blue-500" href="https://github.com/imjafran/tryjs" target="_blank"  title="Git Repository">repository</a> /
+            <a class="hover:underline text-blue-500" href="https://donate.stripe.com/7sI6qE4wg0Fi0M07ss" target="_blank"  title="Buy me a Coffee"> donate</a> /
+            <a class="hover:underline text-blue-500" href="https://fb.com/iamjafran" target="_blank"  title="Connect Jafran Hasan on Facebook">developer</a>
         </footer>
 
 
